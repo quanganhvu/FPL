@@ -6,11 +6,15 @@ import type { BasePlayer } from "../domain/mappers.js";
 const HORIZON_DECAY = 0.9;
 
 // Soft crowd-wisdom tiebreaker: heavily-owned players are more likely to be
-// known/nailed starters. Capped low so it only nudges decisions between
-// otherwise-similar players (e.g. early season when form/PPG are ~0 for
-// everyone) - it must never be able to outweigh real observed performance.
+// known/nailed starters. This is a small FLAT nudge applied once to the final
+// predicted-points figures (see buildPlayers) - NOT folded into underlyingPPG,
+// because underlyingPPG gets multiplied by fixture strength and re-summed
+// across every gameweek in the horizon, so even a "small" per-gameweek bonus
+// there compounds into a large one (a 0.5pt/gw nudge across 11 starters over
+// a 5-gameweek decayed horizon inflated total predicted points by ~18). Capped
+// low so it can only break near-ties, never outweigh real observed performance.
 const OWNERSHIP_BONUS_CAP_PERCENT = 25;
-const OWNERSHIP_BONUS_WEIGHT = 0.02;
+const OWNERSHIP_BONUS_WEIGHT = 0.01;
 
 // Rotation-risk floor/ceiling: a player who starts every game gets the full
 // 1.0 multiplier; a player with zero starts despite games having been played
@@ -18,12 +22,13 @@ const OWNERSHIP_BONUS_WEIGHT = 0.02;
 // suspension is already handled separately by availabilityMultiplier).
 const ROTATION_FLOOR = 0.4;
 
+/** Small flat tiebreaker (max 0.25 pts), added once - not per-gameweek, not fixture-scaled. */
 export function ownershipBonus(player: BasePlayer): number {
   return OWNERSHIP_BONUS_WEIGHT * Math.min(player.selectedByPercent, OWNERSHIP_BONUS_CAP_PERCENT);
 }
 
 export function underlyingPPG(player: BasePlayer): number {
-  return 0.7 * player.form + 0.3 * player.pointsPerGame + ownershipBonus(player);
+  return 0.7 * player.form + 0.3 * player.pointsPerGame;
 }
 
 export function availabilityMultiplier(player: BasePlayer): number {
@@ -98,8 +103,9 @@ export function buildPlayers(
   gamesElapsed: number
 ): Player[] {
   return basePlayers.map((base) => {
-    const predictedNextGw = horizonGws.length > 0 ? predictedForGw(base, fixtures, horizonGws[0], true, gamesElapsed) : 0;
-    const predictedHorizon = predictedOverHorizon(base, fixtures, horizonGws, gamesElapsed);
+    const bonus = ownershipBonus(base);
+    const predictedNextGw = (horizonGws.length > 0 ? predictedForGw(base, fixtures, horizonGws[0], true, gamesElapsed) : 0) + bonus;
+    const predictedHorizon = predictedOverHorizon(base, fixtures, horizonGws, gamesElapsed) + bonus;
     return {
       ...base,
       predictedNextGw,
