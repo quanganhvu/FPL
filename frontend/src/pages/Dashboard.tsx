@@ -1,5 +1,5 @@
 import type { Player } from "@fpl/shared";
-import { getClubs, getPlayers, getTeamSummary } from "../api/client";
+import { getCaptainPicks, getClubs, getGameweek, getPlayers, getTeamSummary } from "../api/client";
 import { useAsync } from "../hooks/useAsync";
 import { useTeamId } from "../state/teamId";
 import { LoadingState, ErrorState } from "../components/AsyncBoundary";
@@ -7,10 +7,29 @@ import { StatTile } from "../components/StatTile";
 import { NotAvailableBanner } from "../components/NotAvailableBanner";
 import { PitchView } from "../components/PitchView";
 
+function formatDeadline(iso: string): { dateLabel: string; countdown: string } {
+  const deadline = new Date(iso);
+  const diffMs = deadline.getTime() - Date.now();
+  const dateLabel = deadline.toLocaleString(undefined, {
+    weekday: "short",
+    day: "numeric",
+    month: "short",
+    hour: "2-digit",
+    minute: "2-digit"
+  });
+
+  if (diffMs <= 0) return { dateLabel, countdown: "Deadline has passed" };
+  const days = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+  const hours = Math.floor((diffMs % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+  if (days > 0) return { dateLabel, countdown: `in ${days}d ${hours}h` };
+  const minutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
+  return { dateLabel, countdown: `in ${hours}h ${minutes}m` };
+}
+
 export default function Dashboard() {
   const { teamId } = useTeamId();
   const { data, loading, error } = useAsync(
-    () => Promise.all([getTeamSummary(teamId), getPlayers(), getClubs()]),
+    () => Promise.all([getTeamSummary(teamId), getPlayers(), getClubs(), getGameweek(), getCaptainPicks(teamId)]),
     [teamId]
   );
 
@@ -18,13 +37,20 @@ export default function Dashboard() {
   if (error) return <ErrorState message={error} />;
   if (!data) return null;
 
-  const [summary, players, clubs] = data;
+  const [summary, players, clubs, gameweek, captainPicks] = data;
   const playerById = new Map(players.map((p) => [p.id, p]));
+  const { dateLabel, countdown } = formatDeadline(gameweek.deadlineTime);
 
   if (!summary.picksAvailable) {
     return (
       <>
         <h1>{summary.managerName}</h1>
+        <div className="card">
+          <h3>Gameweek {gameweek.id}</h3>
+          <p className="muted">
+            Deadline: {dateLabel} ({countdown})
+          </p>
+        </div>
         <NotAvailableBanner />
         <p className="muted">
           Try the <a href="/optimizer">Squad Optimizer</a> to plan your opening squad with the standard £100.0m
@@ -44,10 +70,26 @@ export default function Dashboard() {
   const bench = squad.filter((p) => !startingXI.some((s) => s.id === p.id));
   const captainId = summary.picks.find((p) => p.isCaptain)?.playerId;
   const viceCaptainId = summary.picks.find((p) => p.isViceCaptain)?.playerId;
+  const topCaptainPick = captainPicks.available ? captainPicks.picks[0] : undefined;
 
   return (
     <>
       <h1>{summary.managerName}</h1>
+
+      <div className="card">
+        <h3>Gameweek {gameweek.id} plan</h3>
+        <p className="muted" style={{ marginTop: -8 }}>
+          Deadline: {dateLabel} ({countdown})
+        </p>
+        {topCaptainPick && (
+          <p style={{ marginBottom: 0 }}>
+            <span className="badge badge-brand">Captain pick</span> {topCaptainPick.player.webName} -{" "}
+            {topCaptainPick.rationale}{" "}
+            <a href="/captaincy">See all candidates</a>
+          </p>
+        )}
+      </div>
+
       <div className="stat-grid">
         <StatTile label="Bank" value={`£${(summary.bank / 10).toFixed(1)}m`} />
         <StatTile label="Team Value" value={`£${(summary.teamValue / 10).toFixed(1)}m`} />

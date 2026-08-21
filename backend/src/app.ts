@@ -7,6 +7,7 @@ import teamRoutes from "./routes/team.js";
 import chipsRoutes from "./routes/chips.js";
 import optimizeRoutes from "./routes/optimize.js";
 import clubsRoutes from "./routes/clubs.js";
+import gameweekRoutes from "./routes/gameweek.js";
 
 export async function buildApp(): Promise<FastifyInstance> {
   const app = Fastify({ logger: true });
@@ -19,6 +20,7 @@ export async function buildApp(): Promise<FastifyInstance> {
   await app.register(chipsRoutes);
   await app.register(optimizeRoutes);
   await app.register(clubsRoutes);
+  await app.register(gameweekRoutes);
 
   return app;
 }

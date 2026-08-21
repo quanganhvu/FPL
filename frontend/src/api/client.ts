@@ -2,6 +2,7 @@ import type {
   CaptainPick,
   ChipStrategyResponse,
   Club,
+  GameweekEvent,
   OptimizerRequest,
   OptimizerResult,
   Player,
@@ -82,4 +83,8 @@ export function optimizeSquad(teamId: number, request: OptimizerRequest): Promis
 
 export function getClubs(): Promise<Club[]> {
   return getJson<Club[]>("/api/clubs");
+}
+
+export function getGameweek(): Promise<GameweekEvent> {
+  return getJson<GameweekEvent>("/api/gameweek");
 }
