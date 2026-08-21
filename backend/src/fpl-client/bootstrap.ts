@@ -23,6 +23,8 @@ export interface RawElement {
   selected_by_percent: string;
   status: string;
   chance_of_playing_next_round: number | null;
+  minutes: number;
+  starts: number;
 }
 
 export interface RawEvent {

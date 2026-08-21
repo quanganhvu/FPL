@@ -402,6 +402,89 @@ button.secondary {
   color: var(--text-primary);
 }
 
+/* Player picker (searchable, removable chips) */
+.player-picker {
+  min-width: 220px;
+  max-width: 280px;
+}
+
+.picker-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 6px;
+}
+
+.picker-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 6px 4px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: var(--surface-2);
+  color: var(--text-primary);
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.picker-chip:hover {
+  border-color: var(--brand-pink);
+}
+
+.picker-chip-x {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--baseline);
+  color: var(--surface-1);
+  font-size: 12px;
+  line-height: 1;
+}
+
+.picker-chip:hover .picker-chip-x {
+  background: var(--brand-pink);
+  color: white;
+}
+
+.picker-input-wrap {
+  position: relative;
+}
+
+.picker-input-wrap input {
+  width: 100%;
+}
+
+.picker-dropdown {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  background: var(--surface-1);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  box-shadow: var(--shadow-card);
+  z-index: 20;
+  max-height: 220px;
+  overflow-y: auto;
+}
+
+.picker-option {
+  display: flex;
+  align-items: center;
+  padding: 8px 10px;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.picker-option:hover {
+  background: var(--surface-2);
+}
+
 /* Loading spinner */
 .spinner-row {
   display: flex;

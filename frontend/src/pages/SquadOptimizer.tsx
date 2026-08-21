@@ -1,42 +1,11 @@
 import { useState } from "react";
-import type { OptimizerResult, Player } from "@fpl/shared";
+import type { OptimizerResult } from "@fpl/shared";
 import { getPlayers, optimizeSquad } from "../api/client";
 import { useAsync } from "../hooks/useAsync";
 import { useTeamId } from "../state/teamId";
 import { LoadingState, ErrorState } from "../components/AsyncBoundary";
 import { PitchView } from "../components/PitchView";
-
-function PlayerMultiSelect({
-  players,
-  selected,
-  onChange,
-  label
-}: {
-  players: Player[];
-  selected: number[];
-  onChange: (ids: number[]) => void;
-  label: string;
-}) {
-  return (
-    <div>
-      <label className="muted" style={{ display: "block", marginBottom: 4, fontSize: 12 }}>
-        {label}
-      </label>
-      <select
-        multiple
-        value={selected.map(String)}
-        onChange={(e) => onChange(Array.from(e.target.selectedOptions).map((o) => Number(o.value)))}
-        style={{ height: 120, width: 240 }}
-      >
-        {players.map((p) => (
-          <option key={p.id} value={p.id}>
-            {p.webName} ({p.position}, £{(p.nowCost / 10).toFixed(1)}m)
-          </option>
-        ))}
-      </select>
-    </div>
-  );
-}
+import { PlayerPicker } from "../components/PlayerPicker";
 
 export default function SquadOptimizer() {
   const { teamId } = useTeamId();
@@ -83,8 +52,8 @@ export default function SquadOptimizer() {
           </div>
           {players && (
             <>
-              <PlayerMultiSelect players={players} selected={lockPlayers} onChange={setLockPlayers} label="Lock in squad" />
-              <PlayerMultiSelect players={players} selected={excludePlayers} onChange={setExcludePlayers} label="Exclude" />
+              <PlayerPicker players={players} selected={lockPlayers} onChange={setLockPlayers} label="Lock in squad" />
+              <PlayerPicker players={players} selected={excludePlayers} onChange={setExcludePlayers} label="Exclude" />
             </>
           )}
           <button onClick={runOptimizer} disabled={running}>

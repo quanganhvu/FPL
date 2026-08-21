@@ -15,6 +15,8 @@ export type BasePlayer = {
   selectedByPercent: number;
   status: PlayerStatus;
   chanceOfPlayingNextRound: number | null;
+  minutes: number;
+  starts: number;
 };
 
 const VALID_STATUSES: PlayerStatus[] = ["a", "d", "i", "s", "u", "n"];
@@ -53,6 +55,8 @@ export function mapBasePlayer(raw: RawElement): BasePlayer {
     ictIndex: parseFloat(raw.ict_index) || 0,
     selectedByPercent: parseFloat(raw.selected_by_percent) || 0,
     status: toPlayerStatus(raw.status),
-    chanceOfPlayingNextRound: raw.chance_of_playing_next_round
+    chanceOfPlayingNextRound: raw.chance_of_playing_next_round,
+    minutes: raw.minutes,
+    starts: raw.starts
   };
 }
