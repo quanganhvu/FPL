@@ -33,10 +33,18 @@ const ROTATION_FLOOR = 0.4;
 // unusually good points_per_game average gets trusted exactly as much as an
 // established starter with 38 starts and a lower, but far more reliable,
 // average. FULL_CONFIDENCE_STARTS is the sample size at which pointsPerGame
-// is trusted at face value; below that it's pulled toward a neutral baseline
-// for a rostered top-flight player, proportionally to how little data exists.
+// is trusted at face value; below that it's pulled toward a neutral baseline,
+// proportionally to how little data exists.
+//
+// NEUTRAL_PPG_PRIOR must NOT be "the average cheap player" (empirically ~2.9
+// for proven cheap players) - a player with zero starts isn't a random draw
+// from that population, they're drawn from the population their own manager
+// chose not to play at all, which skews below the players who got a real
+// trial. Set below what a proven-but-modest player (e.g. 19 starts at 1.5
+// ppg) shows, so a real observed mediocre season is never outranked by pure
+// absence of data - "unknown" must not look better than "known to be modest".
 const FULL_CONFIDENCE_STARTS = 10;
-const NEUTRAL_PPG_PRIOR = 2.0;
+const NEUTRAL_PPG_PRIOR = 1.0;
 
 /** Small flat tiebreaker/skepticism nudge (roughly -0.1 to +0.3 pts), added once. */
 export function ownershipAdjustment(player: BasePlayer): number {
