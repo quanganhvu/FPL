@@ -17,6 +17,8 @@ export type BasePlayer = {
   chanceOfPlayingNextRound: number | null;
   minutes: number;
   starts: number;
+  eventPoints: number;
+  totalPoints: number;
 };
 
 const VALID_STATUSES: PlayerStatus[] = ["a", "d", "i", "s", "u", "n"];
@@ -57,6 +59,8 @@ export function mapBasePlayer(raw: RawElement): BasePlayer {
     status: toPlayerStatus(raw.status),
     chanceOfPlayingNextRound: raw.chance_of_playing_next_round,
     minutes: raw.minutes,
-    starts: raw.starts
+    starts: raw.starts,
+    eventPoints: raw.event_points,
+    totalPoints: raw.total_points
   };
 }

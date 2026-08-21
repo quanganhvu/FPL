@@ -627,6 +627,13 @@ button.secondary {
   margin-top: 2px;
 }
 
+.player-chip .gw-points {
+  color: var(--status-good-text);
+  font-size: 11px;
+  font-weight: 700;
+  margin-top: 2px;
+}
+
 .player-chip.captain {
   box-shadow: 0 0 0 2px var(--brand-pink), 0 2px 6px rgba(0, 0, 0, 0.15);
 }

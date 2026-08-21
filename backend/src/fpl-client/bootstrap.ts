@@ -25,6 +25,8 @@ export interface RawElement {
   chance_of_playing_next_round: number | null;
   minutes: number;
   starts: number;
+  event_points: number;
+  total_points: number;
 }
 
 export interface RawEvent {

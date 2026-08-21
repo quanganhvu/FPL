@@ -49,6 +49,8 @@ export default function PlayerExplorer() {
                 <th className="num">Price</th>
                 <th className="num">Form</th>
                 <th className="num">Owned %</th>
+                <th className="num">GW Pts</th>
+                <th className="num">Total Pts</th>
                 <th className="num">Predicted (horizon)</th>
               </tr>
             </thead>
@@ -65,6 +67,8 @@ export default function PlayerExplorer() {
                   <td className="num">£{(p.nowCost / 10).toFixed(1)}m</td>
                   <td className="num">{p.form.toFixed(1)}</td>
                   <td className="num">{p.selectedByPercent.toFixed(1)}%</td>
+                  <td className="num">{p.eventPoints}</td>
+                  <td className="num">{p.totalPoints}</td>
                   <td className="num">{p.predictedOverHorizon.toFixed(1)}</td>
                 </tr>
               ))}

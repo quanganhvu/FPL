@@ -25,6 +25,10 @@ export interface Player {
   chanceOfPlayingNextRound: number | null;
   minutes: number;
   starts: number;
+  /** Points scored in the current/most recently played gameweek (0 if it hasn't kicked off yet). */
+  eventPoints: number;
+  /** Cumulative points for the season so far. */
+  totalPoints: number;
   predictedNextGw: number;
   predictedOverHorizon: number;
 }
