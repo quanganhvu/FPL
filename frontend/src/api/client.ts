@@ -8,7 +8,10 @@ import type {
   TransferOption
 } from "@fpl/shared";
 
-const API_BASE = import.meta.env.VITE_API_BASE;
+// Defaults to same-origin (relative paths) so the built app works out of the
+// box in the unified single-domain Vercel deployment; local dev overrides
+// this via frontend/.env to point at the standalone backend dev server.
+const API_BASE = import.meta.env.VITE_API_BASE ?? "";
 
 async function getJson<T>(path: string): Promise<T> {
   const res = await fetch(`${API_BASE}${path}`);

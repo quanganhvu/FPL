@@ -1,6 +1,6 @@
 import type { IncomingMessage, ServerResponse } from "node:http";
 import type { FastifyInstance } from "fastify";
-import { buildApp } from "../src/app.js";
+import { buildApp } from "../backend/src/app.js";
 
 // One Fastify instance per warm lambda - reused across invocations while the
 // container stays alive, rebuilt on a cold start.
