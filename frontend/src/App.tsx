@@ -44,6 +44,13 @@ export default function App() {
           <Route path="/settings" element={<Settings />} />
         </Routes>
       </div>
+      <footer className="app-footer">
+        <p>
+          No personal data is recorded or stored on any server - your team ID stays in your browser's local storage,
+          and all gameweek data is pulled live from the public FPL API.
+        </p>
+        <p className="app-footer-credit">Curated by Q</p>
+      </footer>
     </>
   );
 }

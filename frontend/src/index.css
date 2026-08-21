@@ -120,6 +120,26 @@ h1 {
   padding: 0 20px 48px;
 }
 
+.app-footer {
+  max-width: 1100px;
+  margin: 24px auto 0;
+  padding: 20px 20px 32px;
+  border-top: 1px solid var(--border);
+  text-align: center;
+}
+
+.app-footer p {
+  margin: 0 0 6px;
+  font-size: 12px;
+  color: var(--text-muted);
+  line-height: 1.5;
+}
+
+.app-footer p.app-footer-credit {
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
 /* Nav */
 .nav {
   display: flex;
