@@ -14,7 +14,10 @@ export default function App() {
   return (
     <>
       <nav className="nav">
-        <span className="nav-title">FPL Analysis</span>
+        <span className="nav-brand">
+          <span className="nav-crest">⚽</span>
+          <span className="nav-title">FPL Analysis</span>
+        </span>
         <NavLink to="/" end>
           Dashboard
         </NavLink>

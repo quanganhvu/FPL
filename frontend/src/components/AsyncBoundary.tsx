@@ -1,7 +1,12 @@
 import type { ReactNode } from "react";
 
 export function LoadingState({ label = "Loading..." }: { label?: string }) {
-  return <p className="muted">{label}</p>;
+  return (
+    <div className="spinner-row">
+      <span className="spinner" />
+      {label}
+    </div>
+  );
 }
 
 export function ErrorState({ message }: { message: string }) {

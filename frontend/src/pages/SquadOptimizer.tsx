@@ -4,8 +4,7 @@ import { getPlayers, optimizeSquad } from "../api/client";
 import { useAsync } from "../hooks/useAsync";
 import { useTeamId } from "../state/teamId";
 import { LoadingState, ErrorState } from "../components/AsyncBoundary";
-
-const POSITION_ORDER = { GKP: 0, DEF: 1, MID: 2, FWD: 3 } as const;
+import { PitchView } from "../components/PitchView";
 
 function PlayerMultiSelect({
   players,
@@ -35,40 +34,6 @@ function PlayerMultiSelect({
           </option>
         ))}
       </select>
-    </div>
-  );
-}
-
-function PitchView({ result }: { result: OptimizerResult }) {
-  const byPosition = (pos: string) =>
-    result.startingXI.filter((p) => p.position === pos).sort((a, b) => b.predictedOverHorizon - a.predictedOverHorizon);
-
-  return (
-    <div className="pitch">
-      {(["FWD", "MID", "DEF", "GKP"] as const).map((pos) => (
-        <div className="pitch-row" key={pos}>
-          {byPosition(pos).map((p) => (
-            <div className={`player-chip ${p.id === result.captain.id ? "captain" : ""}`} key={p.id}>
-              <div>
-                {p.webName}
-                {p.id === result.captain.id ? " (C)" : ""}
-              </div>
-              <div className="cost">£{(p.nowCost / 10).toFixed(1)}m</div>
-            </div>
-          ))}
-        </div>
-      ))}
-      <div className="pitch-row" style={{ marginTop: 8, opacity: 0.7 }}>
-        <span className="muted" style={{ alignSelf: "center", fontSize: 12 }}>
-          Bench:
-        </span>
-        {[...result.bench].sort((a, b) => POSITION_ORDER[a.position] - POSITION_ORDER[b.position]).map((p) => (
-          <div className="player-chip" key={p.id}>
-            <div>{p.webName}</div>
-            <div className="cost">£{(p.nowCost / 10).toFixed(1)}m</div>
-          </div>
-        ))}
-      </div>
     </div>
   );
 }
@@ -145,7 +110,7 @@ export default function SquadOptimizer() {
               <div className="value">{result.predictedPoints.toFixed(1)}</div>
             </div>
           </div>
-          <PitchView result={result} />
+          <PitchView startingXI={result.startingXI} bench={result.bench} captainId={result.captain.id} />
         </div>
       )}
     </>

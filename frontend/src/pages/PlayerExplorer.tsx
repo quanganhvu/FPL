@@ -56,7 +56,12 @@ export default function PlayerExplorer() {
               {data.slice(0, 100).map((p) => (
                 <tr key={p.id}>
                   <td>{p.webName}</td>
-                  <td>{p.position}</td>
+                  <td>
+                    <span className="position-pill">
+                      <span className={`position-dot pos-${p.position}`} />
+                      {p.position}
+                    </span>
+                  </td>
                   <td className="num">£{(p.nowCost / 10).toFixed(1)}m</td>
                   <td className="num">{p.form.toFixed(1)}</td>
                   <td className="num">{p.selectedByPercent.toFixed(1)}%</td>

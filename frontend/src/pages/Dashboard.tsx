@@ -1,9 +1,11 @@
+import type { Player } from "@fpl/shared";
 import { getPlayers, getTeamSummary } from "../api/client";
 import { useAsync } from "../hooks/useAsync";
 import { useTeamId } from "../state/teamId";
 import { LoadingState, ErrorState } from "../components/AsyncBoundary";
 import { StatTile } from "../components/StatTile";
 import { NotAvailableBanner } from "../components/NotAvailableBanner";
+import { PitchView } from "../components/PitchView";
 
 export default function Dashboard() {
   const { teamId } = useTeamId();
@@ -32,7 +34,16 @@ export default function Dashboard() {
     );
   }
 
-  const sortedPicks = [...summary.picks].sort((a, b) => a.multiplier === b.multiplier ? 0 : b.multiplier - a.multiplier);
+  const squad = summary.picks
+    .map((pick) => playerById.get(pick.playerId))
+    .filter((p): p is Player => p !== undefined);
+  const startingXI = summary.picks
+    .filter((p) => p.multiplier > 0)
+    .map((p) => playerById.get(p.playerId))
+    .filter((p): p is Player => p !== undefined);
+  const bench = squad.filter((p) => !startingXI.some((s) => s.id === p.id));
+  const captainId = summary.picks.find((p) => p.isCaptain)?.playerId;
+  const viceCaptainId = summary.picks.find((p) => p.isViceCaptain)?.playerId;
 
   return (
     <>
@@ -45,36 +56,8 @@ export default function Dashboard() {
       </div>
 
       <div className="card">
-        <h3>Squad</h3>
-        <table>
-          <thead>
-            <tr>
-              <th>Player</th>
-              <th>Pos</th>
-              <th className="num">Price</th>
-              <th className="num">Predicted (next GW)</th>
-              <th>Role</th>
-            </tr>
-          </thead>
-          <tbody>
-            {sortedPicks.map((pick) => {
-              const player = playerById.get(pick.playerId);
-              return (
-                <tr key={pick.playerId} style={{ opacity: pick.multiplier === 0 ? 0.5 : 1 }}>
-                  <td>{player?.webName ?? `#${pick.playerId}`}</td>
-                  <td>{player?.position ?? "-"}</td>
-                  <td className="num">{player ? `£${(player.nowCost / 10).toFixed(1)}m` : "-"}</td>
-                  <td className="num">{player ? player.predictedNextGw.toFixed(1) : "-"}</td>
-                  <td>
-                    {pick.isCaptain && <span className="badge badge-good">C</span>}
-                    {pick.isViceCaptain && <span className="badge badge-warning">VC</span>}
-                    {pick.multiplier === 0 && <span className="muted">Bench</span>}
-                  </td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
+        <h3>Your squad</h3>
+        <PitchView startingXI={startingXI} bench={bench} captainId={captainId} viceCaptainId={viceCaptainId} />
       </div>
 
       {summary.chipsUsed.length > 0 && (

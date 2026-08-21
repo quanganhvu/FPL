@@ -35,7 +35,7 @@ export default function Captaincy() {
               axisLine={{ stroke: "var(--baseline)" }}
               width={100}
             />
-            <Bar dataKey="predicted" fill="var(--series-1)" radius={[0, 4, 4, 0]} barSize={28}>
+            <Bar dataKey="predicted" fill="var(--brand-pink)" radius={[0, 4, 4, 0]} barSize={28}>
               <LabelList dataKey="predicted" position="right" fill="var(--text-primary)" fontSize={13} />
             </Bar>
           </BarChart>
@@ -45,7 +45,7 @@ export default function Captaincy() {
       {data.picks.map((pick, i) => (
         <div className="card" key={pick.player.id}>
           <h3>
-            {i === 0 && <span className="badge badge-good">Captain</span>}
+            {i === 0 && <span className="badge badge-brand">Captain</span>}
             {i === 1 && <span className="badge badge-warning">Vice</span>}
             {" "}
             {pick.player.webName}
