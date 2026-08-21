@@ -16,7 +16,7 @@ export default function App() {
       <nav className="nav">
         <span className="nav-brand">
           <span className="nav-crest">⚽</span>
-          <span className="nav-title">FPL Analysis</span>
+          <span className="nav-title">Gaffer's Choice</span>
         </span>
         <NavLink to="/" end>
           Dashboard
