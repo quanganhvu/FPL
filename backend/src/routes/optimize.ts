@@ -17,7 +17,7 @@ export default async function optimizeRoutes(app: FastifyInstance) {
     "/api/team/:teamId/optimize-squad",
     async (request) => {
       const teamId = Number(request.params.teamId);
-      const { horizon, budgetOverride, lockPlayers, excludePlayers } = request.body ?? {};
+      const { horizon, budgetOverride, lockPlayers, excludePlayers, formation } = request.body ?? {};
 
       const { players, events } = await loadPlatformData(horizon);
       let budget = budgetOverride;
@@ -28,7 +28,7 @@ export default async function optimizeRoutes(app: FastifyInstance) {
           : DEFAULT_STARTING_BUDGET;
       }
 
-      const solved = await solveSquadModel({ players, budget, lockPlayers, excludePlayers });
+      const solved = await solveSquadModel({ players, budget, lockPlayers, excludePlayers, formation });
       return toOptimizerResult(solved);
     }
   );

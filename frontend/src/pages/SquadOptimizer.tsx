@@ -7,11 +7,14 @@ import { LoadingState, ErrorState } from "../components/AsyncBoundary";
 import { PitchView } from "../components/PitchView";
 import { PlayerPicker } from "../components/PlayerPicker";
 
+const FORMATIONS = ["3-4-3", "3-5-2", "4-3-3", "4-4-2", "4-5-1", "5-3-2", "5-4-1"];
+
 export default function SquadOptimizer() {
   const { teamId } = useTeamId();
   const { data: players, loading: loadingPlayers, error: playersError } = useAsync(() => getPlayers(), []);
 
   const [budget, setBudget] = useState("100.0");
+  const [formation, setFormation] = useState("");
   const [lockPlayers, setLockPlayers] = useState<number[]>([]);
   const [excludePlayers, setExcludePlayers] = useState<number[]>([]);
   const [result, setResult] = useState<OptimizerResult | undefined>();
@@ -26,7 +29,8 @@ export default function SquadOptimizer() {
       const res = await optimizeSquad(teamId, {
         budgetOverride: budgetTenths,
         lockPlayers,
-        excludePlayers
+        excludePlayers,
+        formation: formation || undefined
       });
       setResult(res);
     } catch (err) {
@@ -49,6 +53,19 @@ export default function SquadOptimizer() {
               Budget (£m)
             </label>
             <input value={budget} onChange={(e) => setBudget(e.target.value)} style={{ width: 100 }} />
+          </div>
+          <div>
+            <label className="muted" style={{ display: "block", marginBottom: 4, fontSize: 12 }}>
+              Formation
+            </label>
+            <select value={formation} onChange={(e) => setFormation(e.target.value)}>
+              <option value="">Best available</option>
+              {FORMATIONS.map((f) => (
+                <option key={f} value={f}>
+                  {f}
+                </option>
+              ))}
+            </select>
           </div>
           {players && (
             <>

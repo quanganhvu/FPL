@@ -7,6 +7,21 @@ export interface SquadModelOptions {
   excludePlayers?: number[];
   currentSquadIds?: number[];
   exactTransfersOut?: number; // requires currentSquadIds; keeps exactly (currentSquadIds.length - t) of them
+  formation?: string; // "DEF-MID-FWD", e.g. "4-4-2"; omit to let the solver pick the best valid formation
+}
+
+/** Parses "4-4-2" into exact starting-XI counts per position. Falls back to the free-choice range if invalid/absent. */
+function resolveXiQuota(formation: string | undefined): Record<string, [number, number]> {
+  const DEFAULT_QUOTA: Record<string, [number, number]> = { GKP: [1, 1], DEF: [3, 5], MID: [2, 5], FWD: [1, 3] };
+  if (!formation) return DEFAULT_QUOTA;
+
+  const match = formation.match(/^(\d)-(\d)-(\d)$/);
+  if (!match) return DEFAULT_QUOTA;
+  const [def, mid, fwd] = [Number(match[1]), Number(match[2]), Number(match[3])];
+  const valid = def >= 3 && def <= 5 && mid >= 2 && mid <= 5 && fwd >= 1 && fwd <= 3 && def + mid + fwd === 10;
+  if (!valid) return DEFAULT_QUOTA;
+
+  return { GKP: [1, 1], DEF: [def, def], MID: [mid, mid], FWD: [fwd, fwd] };
 }
 
 const xVar = (id: number) => `x${id}`;
@@ -37,12 +52,7 @@ export function buildSquadModel(options: SquadModelOptions): { lp: string; pool:
   }
 
   constraints.push(`${nextLabel()}: ${sumVar(pool, yVar)} = 11`);
-  const xiQuota: Record<string, [number, number]> = {
-    GKP: [1, 1],
-    DEF: [3, 5],
-    MID: [2, 5],
-    FWD: [1, 3]
-  };
+  const xiQuota = resolveXiQuota(options.formation);
   for (const position of ["GKP", "DEF", "MID", "FWD"] as const) {
     const subset = pool.filter((p) => p.position === position);
     const [min, max] = xiQuota[position];

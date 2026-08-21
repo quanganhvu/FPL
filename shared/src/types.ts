@@ -117,6 +117,8 @@ export interface OptimizerRequest {
   budgetOverride?: number;
   lockPlayers?: number[];
   excludePlayers?: number[];
+  /** "DEF-MID-FWD", e.g. "4-4-2"; omit to let the solver pick the best valid formation. */
+  formation?: string;
 }
 
 export interface OptimizerResult {
