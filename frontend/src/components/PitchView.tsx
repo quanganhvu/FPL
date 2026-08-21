@@ -32,7 +32,7 @@ function PlayerChip({
         {isVice && <span className="armband vice">V</span>}
       </div>
       <div className="cost">£{(player.nowCost / 10).toFixed(1)}m</div>
-      {player.eventPoints !== 0 && <div className="gw-points">{player.eventPoints} pts this GW</div>}
+      {player.eventPoints !== 0 && <div className="gw-points">{player.eventPoints} points</div>}
     </div>
   );
 }
