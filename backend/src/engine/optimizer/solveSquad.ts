@@ -60,10 +60,28 @@ export async function solveSquadModel(options: SquadModelOptions): Promise<Solve
   return { squad, startingXI, bench, captain, formation: formationString(startingXI) };
 }
 
+const BENCH_WEIGHT = 0.1; // must match the bench-quality weight in buildModel.ts's objective
+
+/**
+ * The single source of truth for "predicted points" of a squad, mirroring the
+ * solver's actual objective exactly (full startingXI + captain bonus + discounted
+ * bench). Any other place comparing squads by predicted value (e.g. a wildcard
+ * gap check) must use this too, or the comparison silently uses two different
+ * yardsticks - which is what let "lock a player in" look better than the
+ * unconstrained optimum despite that being mathematically impossible for what
+ * the solver truly maximizes.
+ */
+export function scoreSquad(startingXI: Player[], bench: Player[], captain: Player): number {
+  return (
+    startingXI.reduce((sum, p) => sum + p.predictedOverHorizon, 0) +
+    captain.predictedOverHorizon +
+    bench.reduce((sum, p) => sum + BENCH_WEIGHT * p.predictedOverHorizon, 0)
+  );
+}
+
 export function toOptimizerResult(solved: SolveResult): OptimizerResult {
   const totalCost = solved.squad.reduce((sum, p) => sum + p.nowCost, 0);
-  const predictedPoints =
-    solved.startingXI.reduce((sum, p) => sum + p.predictedOverHorizon, 0) + solved.captain.predictedOverHorizon;
+  const predictedPoints = scoreSquad(solved.startingXI, solved.bench, solved.captain);
   return {
     squad: solved.squad,
     startingXI: solved.startingXI,

@@ -1,7 +1,7 @@
 import type { ChipStrategyResponse, ChipWindow, Club, GameweekFixtureCount, Player, TeamSummary } from "@fpl/shared";
 import type { RawFixture } from "../fpl-client/fixtures.js";
 import { getGameweekFixtureCounts } from "../domain/fdr.js";
-import { solveSquadModel, toOptimizerResult } from "./optimizer/solveSquad.js";
+import { solveSquadModel, toOptimizerResult, scoreSquad } from "./optimizer/solveSquad.js";
 
 const BLANK_GW_CLUB_THRESHOLD = 6;
 const WILDCARD_GAP_THRESHOLD = 8;
@@ -57,7 +57,7 @@ function buildBlankDoubleRecommendations(
 
 async function buildWildcardRecommendation(
   teamSummary: TeamSummary,
-  squad: Player[],
+  playerById: Map<number, Player>,
   pool: Player[],
   budget: number,
   nextGw: number
@@ -68,7 +68,22 @@ async function buildWildcardRecommendation(
   );
   if (alreadyUsedThisHalf) return undefined;
 
-  const currentPredicted = squad.reduce((sum, p) => sum + p.predictedOverHorizon, 0);
+  // Score the current squad with the exact same formula the optimizer is judged
+  // by (full startingXI + captain bonus + discounted bench), not a flat sum of
+  // all 15 - otherwise this "gap" compares two different yardsticks.
+  const currentStartingXI = teamSummary.picks
+    .filter((p) => p.multiplier > 0)
+    .map((p) => playerById.get(p.playerId))
+    .filter((p): p is Player => p !== undefined);
+  const currentBench = teamSummary.picks
+    .filter((p) => p.multiplier === 0)
+    .map((p) => playerById.get(p.playerId))
+    .filter((p): p is Player => p !== undefined);
+  const currentCaptainId = teamSummary.picks.find((p) => p.isCaptain)?.playerId;
+  const currentCaptain = currentCaptainId ? playerById.get(currentCaptainId) : undefined;
+  if (!currentCaptain) return undefined;
+
+  const currentPredicted = scoreSquad(currentStartingXI, currentBench, currentCaptain);
 
   try {
     const solved = await solveSquadModel({ players: pool, budget });
@@ -107,7 +122,7 @@ export async function getChipStrategy(
 
   const nextGw = upcomingGws[0];
   if (nextGw !== undefined) {
-    const wildcard = await buildWildcardRecommendation(teamSummary, squad, players, budget, nextGw);
+    const wildcard = await buildWildcardRecommendation(teamSummary, playerById, players, budget, nextGw);
     if (wildcard) recommendations.push(wildcard);
   }
 
