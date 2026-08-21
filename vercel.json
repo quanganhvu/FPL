@@ -7,7 +7,12 @@
     },
     "backend": {
       "root": "backend/",
-      "entrypoint": "src/server.ts"
+      "entrypoint": "src/server.ts",
+      "functions": {
+        "src/server.ts": {
+          "includeFiles": "node_modules/highs/build/**"
+        }
+      }
     }
   },
   "rewrites": [
