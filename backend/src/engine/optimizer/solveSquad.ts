@@ -79,15 +79,29 @@ export function scoreSquad(startingXI: Player[], bench: Player[], captain: Playe
   );
 }
 
+/**
+ * The vice-captain only matters as a fallback (if the captain doesn't play,
+ * vice gets the doubled points instead), so it doesn't affect the MILP's
+ * objective and isn't worth its own solver variable - just take the next-best
+ * starter by the same predictedOverHorizon measure the captain was chosen by.
+ */
+function pickViceCaptain(startingXI: Player[], captain: Player): Player {
+  return startingXI
+    .filter((p) => p.id !== captain.id)
+    .reduce((best, p) => (p.predictedOverHorizon > best.predictedOverHorizon ? p : best));
+}
+
 export function toOptimizerResult(solved: SolveResult): OptimizerResult {
   const totalCost = solved.squad.reduce((sum, p) => sum + p.nowCost, 0);
   const predictedPoints = scoreSquad(solved.startingXI, solved.bench, solved.captain);
+  const viceCaptain = pickViceCaptain(solved.startingXI, solved.captain);
   return {
     squad: solved.squad,
     startingXI: solved.startingXI,
     bench: solved.bench,
     formation: solved.formation,
     captain: solved.captain,
+    viceCaptain,
     totalCost,
     predictedPoints
   };

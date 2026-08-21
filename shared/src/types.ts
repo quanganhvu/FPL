@@ -125,6 +125,7 @@ export interface OptimizerResult {
   bench: Player[];
   formation: string;
   captain: Player;
+  viceCaptain: Player;
   totalCost: number;
   predictedPoints: number;
 }

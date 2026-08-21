@@ -79,7 +79,12 @@ export default function SquadOptimizer() {
               <div className="value">{result.predictedPoints.toFixed(1)}</div>
             </div>
           </div>
-          <PitchView startingXI={result.startingXI} bench={result.bench} captainId={result.captain.id} />
+          <PitchView
+            startingXI={result.startingXI}
+            bench={result.bench}
+            captainId={result.captain.id}
+            viceCaptainId={result.viceCaptain.id}
+          />
         </div>
       )}
     </>
