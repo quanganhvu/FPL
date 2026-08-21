@@ -7,6 +7,7 @@ import ChipStrategy from "./pages/ChipStrategy";
 import SquadOptimizer from "./pages/SquadOptimizer";
 import Settings from "./pages/Settings";
 import { useTeamId } from "./state/teamId";
+import { Crest } from "./components/Crest";
 
 export default function App() {
   const { teamId } = useTeamId();
@@ -15,7 +16,9 @@ export default function App() {
     <>
       <nav className="nav">
         <span className="nav-brand">
-          <span className="nav-crest">⚽</span>
+          <span className="nav-crest">
+            <Crest />
+          </span>
           <span className="nav-title">Gaffer's Choice</span>
         </span>
         <NavLink to="/" end>
