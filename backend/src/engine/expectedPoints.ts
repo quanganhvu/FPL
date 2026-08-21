@@ -5,16 +5,22 @@ import type { BasePlayer } from "../domain/mappers.js";
 
 const HORIZON_DECAY = 0.9;
 
-// Soft crowd-wisdom tiebreaker: heavily-owned players are more likely to be
-// known/nailed starters. This is a small FLAT nudge applied once to the final
-// predicted-points figures (see buildPlayers) - NOT folded into underlyingPPG,
-// because underlyingPPG gets multiplied by fixture strength and re-summed
-// across every gameweek in the horizon, so even a "small" per-gameweek bonus
-// there compounds into a large one (a 0.5pt/gw nudge across 11 starters over
-// a 5-gameweek decayed horizon inflated total predicted points by ~18). Capped
-// low so it can only break near-ties, never outweigh real observed performance.
-const OWNERSHIP_BONUS_CAP_PERCENT = 25;
-const OWNERSHIP_BONUS_WEIGHT = 0.01;
+// Crowd-wisdom tiebreaker, bidirectional: ownership meaningfully above the
+// "unremarkable" baseline nudges a player up (heavily-owned = more likely a
+// known/nailed starter); ownership near zero nudges a player down (the wider
+// FPL base is quietly skeptical, often for reasons - competition for a
+// place, a new signing settling in - that raw box-score numbers don't show).
+// This is a small FLAT adjustment applied once to the final predicted-points
+// figures (see buildPlayers) - NOT folded into underlyingPPG, because
+// underlyingPPG gets multiplied by fixture strength and re-summed across
+// every gameweek in the horizon, so even a "small" per-gameweek nudge there
+// compounds into a large one (a 0.5pt/gw nudge across 11 starters over a
+// 5-gameweek decayed horizon once inflated total predicted points by ~18).
+// Kept small so it can only break near-ties, never outweigh real observed
+// performance.
+const OWNERSHIP_BASELINE_PERCENT = 5;
+const OWNERSHIP_CAP_PERCENT = 25;
+const OWNERSHIP_WEIGHT = 0.015;
 
 // Rotation-risk floor/ceiling: a player who starts every game gets the full
 // 1.0 multiplier; a player with zero starts despite games having been played
@@ -22,13 +28,31 @@ const OWNERSHIP_BONUS_WEIGHT = 0.01;
 // suspension is already handled separately by availabilityMultiplier).
 const ROTATION_FLOOR = 0.4;
 
-/** Small flat tiebreaker (max 0.25 pts), added once - not per-gameweek, not fixture-scaled. */
-export function ownershipBonus(player: BasePlayer): number {
-  return OWNERSHIP_BONUS_WEIGHT * Math.min(player.selectedByPercent, OWNERSHIP_BONUS_CAP_PERCENT);
+// A single standout game is a far noisier estimate of a player's true level
+// than a full season is - without this, a player with e.g. 1 start and an
+// unusually good points_per_game average gets trusted exactly as much as an
+// established starter with 38 starts and a lower, but far more reliable,
+// average. FULL_CONFIDENCE_STARTS is the sample size at which pointsPerGame
+// is trusted at face value; below that it's pulled toward a neutral baseline
+// for a rostered top-flight player, proportionally to how little data exists.
+const FULL_CONFIDENCE_STARTS = 10;
+const NEUTRAL_PPG_PRIOR = 2.0;
+
+/** Small flat tiebreaker/skepticism nudge (roughly -0.1 to +0.3 pts), added once. */
+export function ownershipAdjustment(player: BasePlayer): number {
+  const clamped = Math.min(player.selectedByPercent, OWNERSHIP_CAP_PERCENT);
+  return OWNERSHIP_WEIGHT * (clamped - OWNERSHIP_BASELINE_PERCENT);
+}
+
+/** How much to trust the observed points_per_game average, based on sample size. */
+export function ppgConfidence(player: BasePlayer): number {
+  return Math.min(1, player.starts / FULL_CONFIDENCE_STARTS);
 }
 
 export function underlyingPPG(player: BasePlayer): number {
-  return 0.7 * player.form + 0.3 * player.pointsPerGame;
+  const confidence = ppgConfidence(player);
+  const shrunkPointsPerGame = confidence * player.pointsPerGame + (1 - confidence) * NEUTRAL_PPG_PRIOR;
+  return 0.7 * player.form + 0.3 * shrunkPointsPerGame;
 }
 
 export function availabilityMultiplier(player: BasePlayer): number {
@@ -103,7 +127,7 @@ export function buildPlayers(
   gamesElapsed: number
 ): Player[] {
   return basePlayers.map((base) => {
-    const bonus = ownershipBonus(base);
+    const bonus = ownershipAdjustment(base);
     const predictedNextGw = (horizonGws.length > 0 ? predictedForGw(base, fixtures, horizonGws[0], true, gamesElapsed) : 0) + bonus;
     const predictedHorizon = predictedOverHorizon(base, fixtures, horizonGws, gamesElapsed) + bonus;
     return {
