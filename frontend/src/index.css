@@ -402,6 +402,45 @@ button.secondary {
   color: var(--text-primary);
 }
 
+.club-stack-warning {
+  font-size: 13px;
+  color: var(--text-secondary);
+  margin-bottom: 10px;
+}
+
+.squad-analysis-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 20px;
+}
+
+.squad-analysis-grid ul {
+  margin: 0;
+  padding-left: 18px;
+  font-size: 14px;
+  color: var(--text-secondary);
+}
+
+.squad-analysis-grid li {
+  margin-bottom: 8px;
+}
+
+.squad-analysis-label {
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 8px;
+}
+
+.squad-analysis-label.good {
+  color: var(--status-good-text);
+}
+
+.squad-analysis-label.warning {
+  color: var(--status-serious);
+}
+
 /* Player picker (searchable, removable chips) */
 .player-picker {
   min-width: 220px;

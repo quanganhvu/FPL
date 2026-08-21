@@ -23,6 +23,8 @@ export interface Player {
   selectedByPercent: number;
   status: PlayerStatus;
   chanceOfPlayingNextRound: number | null;
+  minutes: number;
+  starts: number;
   predictedNextGw: number;
   predictedOverHorizon: number;
 }

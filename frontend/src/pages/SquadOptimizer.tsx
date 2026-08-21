@@ -1,17 +1,19 @@
 import { useState } from "react";
 import type { OptimizerResult } from "@fpl/shared";
-import { getPlayers, optimizeSquad } from "../api/client";
+import { getClubs, getPlayers, optimizeSquad } from "../api/client";
 import { useAsync } from "../hooks/useAsync";
 import { useTeamId } from "../state/teamId";
 import { LoadingState, ErrorState } from "../components/AsyncBoundary";
 import { PitchView } from "../components/PitchView";
 import { PlayerPicker } from "../components/PlayerPicker";
+import { SquadAnalysis } from "../components/SquadAnalysis";
 
 const FORMATIONS = ["3-4-3", "3-5-2", "4-3-3", "4-4-2", "4-5-1", "5-3-2", "5-4-1"];
 
 export default function SquadOptimizer() {
   const { teamId } = useTeamId();
   const { data: players, loading: loadingPlayers, error: playersError } = useAsync(() => getPlayers(), []);
+  const { data: clubs } = useAsync(() => getClubs(), []);
 
   const [budget, setBudget] = useState("100.0");
   const [formation, setFormation] = useState("");
@@ -101,9 +103,12 @@ export default function SquadOptimizer() {
             bench={result.bench}
             captainId={result.captain.id}
             viceCaptainId={result.viceCaptain.id}
+            clubs={clubs}
           />
         </div>
       )}
+
+      {result && <SquadAnalysis result={result} clubs={clubs} />}
     </>
   );
 }

@@ -1,6 +1,7 @@
 import type {
   CaptainPick,
   ChipStrategyResponse,
+  Club,
   OptimizerRequest,
   OptimizerResult,
   Player,
@@ -77,4 +78,8 @@ export function getChipStrategy(teamId: number): Promise<AvailabilityWrapped<Chi
 
 export function optimizeSquad(teamId: number, request: OptimizerRequest): Promise<OptimizerResult> {
   return postJson(`/api/team/${teamId}/optimize-squad`, request);
+}
+
+export function getClubs(): Promise<Club[]> {
+  return getJson<Club[]>("/api/clubs");
 }

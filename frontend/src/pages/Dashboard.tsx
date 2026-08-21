@@ -1,5 +1,5 @@
 import type { Player } from "@fpl/shared";
-import { getPlayers, getTeamSummary } from "../api/client";
+import { getClubs, getPlayers, getTeamSummary } from "../api/client";
 import { useAsync } from "../hooks/useAsync";
 import { useTeamId } from "../state/teamId";
 import { LoadingState, ErrorState } from "../components/AsyncBoundary";
@@ -10,7 +10,7 @@ import { PitchView } from "../components/PitchView";
 export default function Dashboard() {
   const { teamId } = useTeamId();
   const { data, loading, error } = useAsync(
-    () => Promise.all([getTeamSummary(teamId), getPlayers()]),
+    () => Promise.all([getTeamSummary(teamId), getPlayers(), getClubs()]),
     [teamId]
   );
 
@@ -18,7 +18,7 @@ export default function Dashboard() {
   if (error) return <ErrorState message={error} />;
   if (!data) return null;
 
-  const [summary, players] = data;
+  const [summary, players, clubs] = data;
   const playerById = new Map(players.map((p) => [p.id, p]));
 
   if (!summary.picksAvailable) {
@@ -57,7 +57,7 @@ export default function Dashboard() {
 
       <div className="card">
         <h3>Your squad</h3>
-        <PitchView startingXI={startingXI} bench={bench} captainId={captainId} viceCaptainId={viceCaptainId} />
+        <PitchView startingXI={startingXI} bench={bench} captainId={captainId} viceCaptainId={viceCaptainId} clubs={clubs} />
       </div>
 
       {summary.chipsUsed.length > 0 && (
