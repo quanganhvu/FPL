@@ -4,3 +4,6 @@ dist/
 .cache/
 *.log
 .vercel
+
+.vercel
+.env*
