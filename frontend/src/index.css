@@ -368,6 +368,24 @@ h1 {
   margin-right: 4px;
 }
 
+.theme-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 10px;
+  border-radius: 7px;
+  border: none;
+  background: rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.85);
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.theme-toggle:hover {
+  background: rgba(255, 255, 255, 0.18);
+  opacity: 1;
+}
+
 /* Cards */
 .card {
   background: var(--surface-1);

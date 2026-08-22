@@ -9,6 +9,7 @@ import Settings from "./pages/Settings";
 import { useTeamId } from "./state/teamId";
 import { Crest } from "./components/Crest";
 import { FixtureTicker } from "./components/FixtureTicker";
+import { ThemeToggle } from "./components/ThemeToggle";
 
 export default function App() {
   const { teamId } = useTeamId();
@@ -32,6 +33,7 @@ export default function App() {
         <NavLink to="/optimizer">Squad Optimizer</NavLink>
         <span className="nav-spacer" />
         <span className="team-id-badge">Team {teamId}</span>
+        <ThemeToggle />
         <NavLink to="/settings">Settings</NavLink>
       </nav>
       <div className="page-body">
