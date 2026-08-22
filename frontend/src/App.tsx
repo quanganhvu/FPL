@@ -9,6 +9,8 @@ import Settings from "./pages/Settings";
 import { useTeamId } from "./state/teamId";
 import { Crest } from "./components/Crest";
 import { FixtureTicker } from "./components/FixtureTicker";
+import { CurrentFixtures } from "./components/CurrentFixtures";
+import { LeagueTable } from "./components/LeagueTable";
 import { ThemeToggle } from "./components/ThemeToggle";
 
 export default function App() {
@@ -48,7 +50,11 @@ export default function App() {
             <Route path="/settings" element={<Settings />} />
           </Routes>
         </div>
-        <FixtureTicker />
+        <aside className="sidebar">
+          <CurrentFixtures />
+          <LeagueTable />
+          <FixtureTicker />
+        </aside>
       </div>
       <footer className="app-footer">
         <p>

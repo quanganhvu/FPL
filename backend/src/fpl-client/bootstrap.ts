@@ -10,6 +10,12 @@ export interface RawTeam {
   strength_attack_away: number;
   strength_defence_home: number;
   strength_defence_away: number;
+  played: number;
+  win: number;
+  draw: number;
+  loss: number;
+  points: number;
+  position: number;
 }
 
 export interface RawElement {

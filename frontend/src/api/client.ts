@@ -4,6 +4,7 @@ import type {
   Club,
   FixtureTickerClub,
   GameweekEvent,
+  LiveFixture,
   OptimizerRequest,
   OptimizerResult,
   Player,
@@ -92,4 +93,12 @@ export function getGameweek(): Promise<GameweekEvent> {
 
 export function getFixtureTicker(horizon = 10): Promise<FixtureTickerClub[]> {
   return getJson<FixtureTickerClub[]>(`/api/fixtures/ticker?horizon=${horizon}`);
+}
+
+export function getLeagueTable(): Promise<Club[]> {
+  return getJson<Club[]>("/api/league-table");
+}
+
+export function getCurrentFixtures(): Promise<LiveFixture[]> {
+  return getJson<LiveFixture[]>("/api/fixtures/current");
 }

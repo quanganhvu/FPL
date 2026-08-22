@@ -9,6 +9,8 @@ import optimizeRoutes from "./routes/optimize.js";
 import clubsRoutes from "./routes/clubs.js";
 import gameweekRoutes from "./routes/gameweek.js";
 import fixtureTickerRoutes from "./routes/fixtureTicker.js";
+import leagueTableRoutes from "./routes/leagueTable.js";
+import currentFixturesRoutes from "./routes/currentFixtures.js";
 
 export async function buildApp(): Promise<FastifyInstance> {
   const app = Fastify({ logger: true });
@@ -23,6 +25,8 @@ export async function buildApp(): Promise<FastifyInstance> {
   await app.register(clubsRoutes);
   await app.register(gameweekRoutes);
   await app.register(fixtureTickerRoutes);
+  await app.register(leagueTableRoutes);
+  await app.register(currentFixturesRoutes);
 
   return app;
 }

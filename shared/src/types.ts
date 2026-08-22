@@ -7,6 +7,12 @@ export interface Club {
   name: string;
   shortName: string;
   strength: number;
+  played: number;
+  win: number;
+  draw: number;
+  loss: number;
+  points: number;
+  position: number;
 }
 
 export interface Player {
@@ -138,6 +144,21 @@ export interface OptimizerRequest {
   excludePlayers?: number[];
   /** "DEF-MID-FWD", e.g. "4-4-2"; omit to let the solver pick the best valid formation. */
   formation?: string;
+}
+
+export interface LiveFixture {
+  id: number;
+  gw: number;
+  homeClubId: number;
+  homeShortName: string;
+  awayClubId: number;
+  awayShortName: string;
+  homeScore: number | null;
+  awayScore: number | null;
+  started: boolean;
+  finished: boolean;
+  finishedProvisional: boolean;
+  kickoffTime: string | null;
 }
 
 export interface OptimizerResult {

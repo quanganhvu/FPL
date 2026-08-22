@@ -40,7 +40,13 @@ export function mapClub(raw: RawTeam): Club {
     id: raw.id,
     name: raw.name,
     shortName: raw.short_name,
-    strength: raw.strength
+    strength: raw.strength,
+    played: raw.played,
+    win: raw.win,
+    draw: raw.draw,
+    loss: raw.loss,
+    points: raw.points,
+    position: raw.position
   };
 }
 

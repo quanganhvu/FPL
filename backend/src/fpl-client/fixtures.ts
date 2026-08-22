@@ -9,6 +9,11 @@ export interface RawFixture {
   team_h_difficulty: number;
   team_a_difficulty: number;
   finished: boolean;
+  started: boolean | null;
+  finished_provisional: boolean;
+  kickoff_time: string | null;
+  team_h_score: number | null;
+  team_a_score: number | null;
 }
 
 export function getFixtures(): Promise<RawFixture[]> {

@@ -75,11 +75,15 @@ export function FixtureTicker() {
   const { data, loading, error } = useAsync(() => getFixtureTicker(HORIZON), []);
 
   return (
-    <aside className="sidebar">
+    <div className="sidebar-section">
       <div className="sidebar-header">Fixture difficulty</div>
+      <p className="ticker-legend">
+        <span className="ticker-legend-example">CLB</span> home &nbsp;·&nbsp;{" "}
+        <span className="ticker-legend-example ticker-legend-away">clb</span> away
+      </p>
       {loading && <LoadingState label="Loading fixtures..." />}
       {error && <ErrorState message={error} />}
       {data && <TickerTable clubs={data} />}
-    </aside>
+    </div>
   );
 }

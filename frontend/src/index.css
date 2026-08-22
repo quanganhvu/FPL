@@ -139,8 +139,15 @@ h1 {
   padding: 16px;
   box-shadow: var(--shadow-card);
   max-height: calc(100vh - 96px);
+  overflow-y: auto;
   display: flex;
   flex-direction: column;
+}
+
+.sidebar-section + .sidebar-section {
+  margin-top: 20px;
+  padding-top: 16px;
+  border-top: 1px solid var(--border);
 }
 
 .sidebar-header {
@@ -149,9 +156,24 @@ h1 {
   margin-bottom: 12px;
 }
 
+.ticker-legend {
+  font-size: 11px;
+  color: var(--text-muted);
+  margin: -6px 0 10px;
+}
+
+.ticker-legend-example {
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.ticker-legend-away {
+  text-transform: lowercase;
+}
+
 .ticker-scroll {
-  overflow: auto;
-  min-height: 0;
+  overflow-x: auto;
+  overflow-y: visible;
 }
 
 .ticker-table {
@@ -248,6 +270,90 @@ h1 {
   background: var(--status-critical);
 }
 
+.fixture-row {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr auto;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 0;
+  font-size: 13px;
+  border-bottom: 1px solid var(--gridline);
+}
+
+.fixture-row:last-child {
+  border-bottom: none;
+}
+
+.fixture-club {
+  font-weight: 700;
+}
+
+.fixture-club:last-of-type {
+  text-align: left;
+}
+
+.fixture-score {
+  font-weight: 700;
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+  justify-self: center;
+}
+
+.fixture-status {
+  justify-self: end;
+  min-width: 44px;
+  text-align: right;
+}
+
+.fixture-kickoff {
+  font-size: 11px;
+  white-space: nowrap;
+}
+
+.league-table-note {
+  font-size: 12px;
+  margin-bottom: 8px;
+}
+
+.league-table-scroll {
+  overflow-x: auto;
+}
+
+.league-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+}
+
+.league-table th {
+  color: var(--text-muted);
+  font-weight: 600;
+  text-align: center;
+  padding: 4px 6px;
+  text-transform: none;
+  letter-spacing: 0;
+}
+
+.league-table th:nth-child(2) {
+  text-align: left;
+}
+
+.league-table td {
+  text-align: center;
+  padding: 4px 6px;
+  border-bottom: 1px solid var(--gridline);
+}
+
+.league-table-club {
+  text-align: left !important;
+  font-weight: 700;
+}
+
+.league-table-pts {
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
 @media (max-width: 900px) {
   .page-body {
     flex-direction: column;
@@ -257,6 +363,7 @@ h1 {
     width: 100%;
     position: static;
     max-height: none;
+    overflow-y: visible;
   }
 
   .ticker-scroll {
