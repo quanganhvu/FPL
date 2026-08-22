@@ -1,23 +1,22 @@
 import type { Player } from "@fpl/shared";
 import type { RawFixture } from "../fpl-client/fixtures.js";
-import { getClubFixturesInGw } from "../domain/fdr.js";
+import { getClubFixturesInGw, type ClubFixture } from "../domain/fdr.js";
 import type { BasePlayer } from "../domain/mappers.js";
+import type { TeamStrength } from "../domain/teamStrength.js";
+import { predictWithModel, hasModelForPosition } from "./mlModel.js";
+import { shrinkRate, type FeatureVector } from "./features.js";
 
 const HORIZON_DECAY = 0.9;
 
+// --- Heuristic fallback model (used only when no trained ML model covers a
+// position, or team-strength data is unavailable for a fixture) ---
+
 // Crowd-wisdom tiebreaker, bidirectional: ownership meaningfully above the
 // "unremarkable" baseline nudges a player up (heavily-owned = more likely a
-// known/nailed starter); ownership near zero nudges a player down (the wider
-// FPL base is quietly skeptical, often for reasons - competition for a
-// place, a new signing settling in - that raw box-score numbers don't show).
-// This is a small FLAT adjustment applied once to the final predicted-points
-// figures (see buildPlayers) - NOT folded into underlyingPPG, because
-// underlyingPPG gets multiplied by fixture strength and re-summed across
-// every gameweek in the horizon, so even a "small" per-gameweek nudge there
-// compounds into a large one (a 0.5pt/gw nudge across 11 starters over a
-// 5-gameweek decayed horizon once inflated total predicted points by ~18).
-// Kept small so it can only break near-ties, never outweigh real observed
-// performance.
+// known/nailed starter); ownership near zero nudges a player down. Small flat
+// adjustment, applied once - NOT folded into underlyingPPG (a "small"
+// per-gameweek nudge there compounds across the horizon and all 11 starters,
+// which once inflated total predicted points by ~18).
 const OWNERSHIP_BASELINE_PERCENT = 5;
 const OWNERSHIP_CAP_PERCENT = 25;
 const OWNERSHIP_WEIGHT = 0.015;
@@ -28,39 +27,22 @@ const OWNERSHIP_WEIGHT = 0.015;
 // suspension is already handled separately by availabilityMultiplier).
 const ROTATION_FLOOR = 0.4;
 
-// A single standout game is a far noisier estimate of a player's true level
-// than a full season is - without this, a player with e.g. 1 start and an
-// unusually good points_per_game average gets trusted exactly as much as an
-// established starter with 38 starts and a lower, but far more reliable,
-// average. FULL_CONFIDENCE_STARTS is the sample size at which pointsPerGame
-// is trusted at face value; below that it's pulled toward a neutral baseline,
-// proportionally to how little data exists.
-//
-// NEUTRAL_PPG_PRIOR must NOT be "the average cheap player" (empirically ~2.9
-// for proven cheap players) - a player with zero starts isn't a random draw
-// from that population, they're drawn from the population their own manager
-// chose not to play at all, which skews below the players who got a real
-// trial. Set below what a proven-but-modest player (e.g. 19 starts at 1.5
-// ppg) shows, so a real observed mediocre season is never outranked by pure
-// absence of data - "unknown" must not look better than "known to be modest".
-const FULL_CONFIDENCE_STARTS = 10;
-const NEUTRAL_PPG_PRIOR = 1.0;
-
-/** Small flat tiebreaker/skepticism nudge (roughly -0.1 to +0.3 pts), added once. */
 export function ownershipAdjustment(player: BasePlayer): number {
   const clamped = Math.min(player.selectedByPercent, OWNERSHIP_CAP_PERCENT);
   return OWNERSHIP_WEIGHT * (clamped - OWNERSHIP_BASELINE_PERCENT);
 }
 
-/** How much to trust the observed points_per_game average, based on sample size. */
-export function ppgConfidence(player: BasePlayer): number {
-  return Math.min(1, player.starts / FULL_CONFIDENCE_STARTS);
+// Sample-size shrinkage (see features.ts's shrinkRate for the full rationale -
+// the same single-lucky-game problem applies here as it does to the ML model's
+// inputs, just for the heuristic fallback's own raw form/pointsPerGame use).
+export function underlyingPPG(player: BasePlayer): number {
+  const shrunkForm = shrinkRate(player.form, player.starts);
+  const shrunkPointsPerGame = shrinkRate(player.pointsPerGame, player.starts);
+  return 0.7 * shrunkForm + 0.3 * shrunkPointsPerGame;
 }
 
-export function underlyingPPG(player: BasePlayer): number {
-  const confidence = ppgConfidence(player);
-  const shrunkPointsPerGame = confidence * player.pointsPerGame + (1 - confidence) * NEUTRAL_PPG_PRIOR;
-  return 0.7 * player.form + 0.3 * shrunkPointsPerGame;
+export function fixtureMultiplier(fdr: number): number {
+  return 1.3 - 0.15 * (fdr - 1);
 }
 
 export function availabilityMultiplier(player: BasePlayer): number {
@@ -90,54 +72,133 @@ export function rotationMultiplier(player: BasePlayer, gamesElapsed: number): nu
   return ROTATION_FLOOR + (1 - ROTATION_FLOOR) * startRate;
 }
 
-export function fixtureMultiplier(fdr: number): number {
-  return 1.3 - 0.15 * (fdr - 1);
+// --- ML model integration ---
+// The trained model (backend/scripts/trainModel.ts) predicts a 5-gameweek
+// forward-looking AVERAGE rate, given one reference fixture's context. That
+// makes it fundamentally different from the old per-gameweek heuristic: it
+// must be computed ONCE per player (from their next fixture) and reused as a
+// flat rate across the whole horizon - calling it again per future gameweek
+// and summing the results would sum several overlapping 5-week-average
+// estimates on top of each other (this exact bug inflated total predicted
+// points from ~95 to ~150 before being caught in verification). Blank/double
+// gameweeks still scale the total via fixture COUNT for that specific week,
+// not by re-deriving the rate.
+
+function isValidStrength(s: TeamStrength): boolean {
+  // Real Premier League teams all carry strength ratings in the ~1000-1400 range.
+  // Very early in a season FPL hasn't populated these yet (all teams read 0), and a
+  // club that isn't actually in the PL this season reads 0 permanently - either way,
+  // standardizing that extreme an outlier makes the linear model extrapolate to
+  // nonsense (one such case scored 3-4x higher than an elite proven alternative),
+  // so treat it as invalid and fall back to the heuristic, which has no dependency
+  // on team strength at all.
+  return s.attackHome > 0 && s.attackAway > 0 && s.defenceHome > 0 && s.defenceAway > 0;
 }
 
-/** Raw fixture-driven prediction for one gameweek, ignoring ep_next blending. */
-function predictedFromFixtures(player: BasePlayer, fixtures: RawFixture[], gw: number, gamesElapsed: number): number {
-  const clubFixtures = getClubFixturesInGw(fixtures, player.clubId, gw);
-  if (clubFixtures.length === 0) return 0; // blank gameweek for this player's club
-  const fixtureSum = clubFixtures.reduce((sum, f) => sum + fixtureMultiplier(f.difficulty), 0);
-  return underlyingPPG(player) * availabilityMultiplier(player) * rotationMultiplier(player, gamesElapsed) * fixtureSum;
+function buildLiveFeatures(
+  player: BasePlayer,
+  fixture: ClubFixture,
+  ownStrength: TeamStrength,
+  oppStrength: TeamStrength,
+  gamesElapsed: number
+): FeatureVector {
+  return {
+    form: shrinkRate(player.form, player.starts),
+    pointsPerGame: shrinkRate(player.pointsPerGame, player.starts),
+    price: player.nowCost,
+    isHome: fixture.isHome ? 1 : 0,
+    ownStrengthAttack: fixture.isHome ? ownStrength.attackHome : ownStrength.attackAway,
+    ownStrengthDefence: fixture.isHome ? ownStrength.defenceHome : ownStrength.defenceAway,
+    oppStrengthAttack: fixture.isHome ? oppStrength.attackAway : oppStrength.attackHome,
+    oppStrengthDefence: fixture.isHome ? oppStrength.defenceAway : oppStrength.defenceHome,
+    ownershipLog: Math.log1p(player.selectedByPercent),
+    xgi90: player.xgi90,
+    minutesPerGame: gamesElapsed > 0 ? player.minutes / gamesElapsed : 0,
+    startsCount: player.starts
+  };
 }
 
-/** Predicted points for a single gameweek. Blends in FPL's own ep_next when this is the immediate next GW. */
-export function predictedForGw(
+interface UnderlyingRate {
+  rate: number; // expected points per gameweek, fixture-difficulty-aware but NOT yet fixture-count-scaled
+  fromModel: boolean;
+}
+
+/**
+ * The player's single "going rate" per gameweek, computed once from their
+ * next fixture(s). Averages across fixtures for a double gameweek (each
+ * independently estimates the same going rate, so this isn't a leak the way
+ * summing per-gameweek-loop calls would be) and falls back to the
+ * fixture-independent heuristic rate when no model/valid team-strength data
+ * is available.
+ */
+function computeUnderlyingRate(
+  player: BasePlayer,
+  nextFixtures: ClubFixture[],
+  teamStrength: Map<number, TeamStrength>,
+  gamesElapsed: number
+): UnderlyingRate {
+  const modelPredictions: number[] = [];
+  for (const fixture of nextFixtures) {
+    const ownStrength = teamStrength.get(player.clubId);
+    const oppStrength = teamStrength.get(fixture.opponentClubId);
+    if (!ownStrength || !oppStrength || !isValidStrength(ownStrength) || !isValidStrength(oppStrength)) continue;
+    const features = buildLiveFeatures(player, fixture, ownStrength, oppStrength, gamesElapsed);
+    const prediction = predictWithModel(player.position, features);
+    if (prediction !== undefined) modelPredictions.push(Math.max(0, prediction));
+  }
+
+  if (modelPredictions.length > 0) {
+    const rate = modelPredictions.reduce((a, b) => a + b, 0) / modelPredictions.length;
+    return { rate, fromModel: true };
+  }
+
+  // Heuristic fallback: blend the player's fixture-independent quality with this
+  // week's fixture difficulty (or a neutral difficulty if there's no reference
+  // fixture at all, e.g. a blank gameweek next).
+  const avgDifficulty =
+    nextFixtures.length > 0 ? nextFixtures.reduce((sum, f) => sum + f.difficulty, 0) / nextFixtures.length : 3;
+  return { rate: underlyingPPG(player) * fixtureMultiplier(avgDifficulty), fromModel: false };
+}
+
+/** Points for one gameweek, given an already-computed going rate: rate x fixture count that week. */
+function predictedFromFixtures(
   player: BasePlayer,
   fixtures: RawFixture[],
   gw: number,
-  isImmediateNext: boolean,
+  rate: number,
   gamesElapsed: number
 ): number {
-  const fromFixtures = predictedFromFixtures(player, fixtures, gw, gamesElapsed);
-  if (!isImmediateNext) return fromFixtures;
-  return 0.5 * player.epNext + 0.5 * fromFixtures;
-}
-
-/** Decayed sum of predicted points across a horizon of gameweeks. gws[0] is treated as the immediate next GW. */
-export function predictedOverHorizon(
-  player: BasePlayer,
-  fixtures: RawFixture[],
-  gws: number[],
-  gamesElapsed: number
-): number {
-  return gws.reduce((sum, gw, index) => {
-    const predicted = predictedForGw(player, fixtures, gw, index === 0, gamesElapsed);
-    return sum + predicted * HORIZON_DECAY ** index;
-  }, 0);
+  const clubFixtures = getClubFixturesInGw(fixtures, player.clubId, gw);
+  if (clubFixtures.length === 0) return 0; // blank gameweek for this player's club
+  return availabilityMultiplier(player) * rotationMultiplier(player, gamesElapsed) * rate * clubFixtures.length;
 }
 
 export function buildPlayers(
   basePlayers: BasePlayer[],
   fixtures: RawFixture[],
   horizonGws: number[],
+  teamStrength: Map<number, TeamStrength>,
   gamesElapsed: number
 ): Player[] {
   return basePlayers.map((base) => {
-    const bonus = ownershipAdjustment(base);
-    const predictedNextGw = (horizonGws.length > 0 ? predictedForGw(base, fixtures, horizonGws[0], true, gamesElapsed) : 0) + bonus;
-    const predictedHorizon = predictedOverHorizon(base, fixtures, horizonGws, gamesElapsed) + bonus;
+    const nextGw = horizonGws[0];
+    const nextFixtures = nextGw !== undefined ? getClubFixturesInGw(fixtures, base.clubId, nextGw) : [];
+    const { rate, fromModel } = computeUnderlyingRate(base, nextFixtures, teamStrength, gamesElapsed);
+
+    // The ownership tiebreaker/skepticism nudge is already one of the ML model's own
+    // learned features - only add it manually when the heuristic fallback was used,
+    // to avoid double-counting the same signal.
+    const bonus = fromModel ? 0 : ownershipAdjustment(base);
+
+    const fromFixturesNextGw = nextGw !== undefined ? predictedFromFixtures(base, fixtures, nextGw, rate, gamesElapsed) : 0;
+    const predictedNextGw = 0.5 * base.epNext + 0.5 * fromFixturesNextGw + bonus;
+
+    const predictedHorizon =
+      horizonGws.reduce((sum, gw, index) => {
+        const points = index === 0 ? fromFixturesNextGw : predictedFromFixtures(base, fixtures, gw, rate, gamesElapsed);
+        return sum + points * HORIZON_DECAY ** index;
+      }, 0) + bonus;
+
     return {
       ...base,
       predictedNextGw,

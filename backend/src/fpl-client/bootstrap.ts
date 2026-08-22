@@ -6,6 +6,10 @@ export interface RawTeam {
   name: string;
   short_name: string;
   strength: number;
+  strength_attack_home: number;
+  strength_attack_away: number;
+  strength_defence_home: number;
+  strength_defence_away: number;
 }
 
 export interface RawElement {
@@ -27,6 +31,7 @@ export interface RawElement {
   starts: number;
   event_points: number;
   total_points: number;
+  expected_goal_involvements_per_90: string;
 }
 
 export interface RawEvent {

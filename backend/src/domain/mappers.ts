@@ -19,6 +19,7 @@ export type BasePlayer = {
   starts: number;
   eventPoints: number;
   totalPoints: number;
+  xgi90: number;
 };
 
 const VALID_STATUSES: PlayerStatus[] = ["a", "d", "i", "s", "u", "n"];
@@ -61,6 +62,7 @@ export function mapBasePlayer(raw: RawElement): BasePlayer {
     minutes: raw.minutes,
     starts: raw.starts,
     eventPoints: raw.event_points,
-    totalPoints: raw.total_points
+    totalPoints: raw.total_points,
+    xgi90: parseFloat(raw.expected_goal_involvements_per_90) || 0
   };
 }
