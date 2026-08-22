@@ -8,6 +8,7 @@ import SquadOptimizer from "./pages/SquadOptimizer";
 import Settings from "./pages/Settings";
 import { useTeamId } from "./state/teamId";
 import { Crest } from "./components/Crest";
+import { FixtureTicker } from "./components/FixtureTicker";
 
 export default function App() {
   const { teamId } = useTeamId();
@@ -33,16 +34,19 @@ export default function App() {
         <span className="team-id-badge">Team {teamId}</span>
         <NavLink to="/settings">Settings</NavLink>
       </nav>
-      <div className="layout">
-        <Routes>
-          <Route path="/" element={<Dashboard />} />
-          <Route path="/players" element={<PlayerExplorer />} />
-          <Route path="/transfers" element={<TransferSuggestions />} />
-          <Route path="/captaincy" element={<Captaincy />} />
-          <Route path="/chips" element={<ChipStrategy />} />
-          <Route path="/optimizer" element={<SquadOptimizer />} />
-          <Route path="/settings" element={<Settings />} />
-        </Routes>
+      <div className="page-body">
+        <div className="layout">
+          <Routes>
+            <Route path="/" element={<Dashboard />} />
+            <Route path="/players" element={<PlayerExplorer />} />
+            <Route path="/transfers" element={<TransferSuggestions />} />
+            <Route path="/captaincy" element={<Captaincy />} />
+            <Route path="/chips" element={<ChipStrategy />} />
+            <Route path="/optimizer" element={<SquadOptimizer />} />
+            <Route path="/settings" element={<Settings />} />
+          </Routes>
+        </div>
+        <FixtureTicker />
       </div>
       <footer className="app-footer">
         <p>

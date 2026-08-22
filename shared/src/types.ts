@@ -106,6 +106,19 @@ export interface GameweekFixtureCount {
   doubleClubIds: number[];
 }
 
+export interface TickerFixture {
+  gw: number;
+  opponentShortName: string;
+  difficulty: number; // 1 (easiest) to 5 (hardest)
+  isHome: boolean;
+}
+
+export interface FixtureTickerClub {
+  clubId: number;
+  shortName: string;
+  fixtures: TickerFixture[];
+}
+
 export interface ChipWindow {
   chip: "wildcard" | "free-hit" | "bench-boost" | "triple-captain";
   gw: number;

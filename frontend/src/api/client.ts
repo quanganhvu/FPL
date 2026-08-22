@@ -2,6 +2,7 @@ import type {
   CaptainPick,
   ChipStrategyResponse,
   Club,
+  FixtureTickerClub,
   GameweekEvent,
   OptimizerRequest,
   OptimizerResult,
@@ -87,4 +88,8 @@ export function getClubs(): Promise<Club[]> {
 
 export function getGameweek(): Promise<GameweekEvent> {
   return getJson<GameweekEvent>("/api/gameweek");
+}
+
+export function getFixtureTicker(horizon = 10): Promise<FixtureTickerClub[]> {
+  return getJson<FixtureTickerClub[]>(`/api/fixtures/ticker?horizon=${horizon}`);
 }

@@ -114,14 +114,158 @@ h1 {
   margin: 4px 0 20px;
 }
 
-.layout {
-  max-width: 1100px;
+.page-body {
+  max-width: 1440px;
   margin: 0 auto;
   padding: 0 20px 48px;
+  display: flex;
+  align-items: flex-start;
+  gap: 24px;
+}
+
+.layout {
+  flex: 1;
+  min-width: 0;
+}
+
+.sidebar {
+  flex-shrink: 0;
+  width: 320px;
+  position: sticky;
+  top: 76px;
+  background: var(--surface-1);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 16px;
+  box-shadow: var(--shadow-card);
+  max-height: calc(100vh - 96px);
+  display: flex;
+  flex-direction: column;
+}
+
+.sidebar-header {
+  font-weight: 700;
+  font-size: 14px;
+  margin-bottom: 12px;
+}
+
+.ticker-scroll {
+  overflow: auto;
+  min-height: 0;
+}
+
+.ticker-table {
+  border-collapse: separate;
+  border-spacing: 2px;
+  font-size: 10px;
+  width: auto;
+}
+
+.ticker-table th {
+  position: sticky;
+  top: 0;
+  background: var(--surface-1);
+  color: var(--text-muted);
+  font-weight: 600;
+  text-align: center;
+  padding: 2px;
+  font-size: 10px;
+  text-transform: none;
+  letter-spacing: 0;
+}
+
+.ticker-table td {
+  padding: 0;
+  border-bottom: none;
+}
+
+.ticker-club {
+  font-weight: 700;
+  font-size: 11px;
+  color: var(--text-primary);
+  padding-right: 6px !important;
+  white-space: nowrap;
+  position: sticky;
+  left: 0;
+  background: var(--surface-1);
+}
+
+.ticker-cell {
+  width: 26px;
+  height: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  font-weight: 700;
+  color: white;
+  font-size: 9px;
+}
+
+.ticker-cell-double {
+  width: 26px;
+  height: 22px;
+  display: flex;
+  flex-direction: column;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.ticker-cell-half {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  color: white;
+  font-size: 7px;
+}
+
+.fdr-blank {
+  background: var(--gridline);
+}
+
+.fdr-1 {
+  background: var(--status-good);
+}
+
+.fdr-2 {
+  background: color-mix(in srgb, var(--status-good) 55%, var(--surface-2));
+  color: var(--text-primary);
+}
+
+.fdr-3 {
+  background: var(--baseline);
+  color: var(--text-primary);
+}
+
+.fdr-4 {
+  background: var(--status-warning);
+  color: var(--text-primary);
+}
+
+.fdr-5 {
+  background: var(--status-critical);
+}
+
+@media (max-width: 900px) {
+  .page-body {
+    flex-direction: column;
+  }
+
+  .sidebar {
+    width: 100%;
+    position: static;
+    max-height: none;
+  }
+
+  .ticker-scroll {
+    overflow-x: auto;
+  }
 }
 
 .app-footer {
-  max-width: 1100px;
+  max-width: 1440px;
   margin: 24px auto 0;
   padding: 20px 20px 32px;
   border-top: 1px solid var(--border);
